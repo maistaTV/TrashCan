@@ -1900,11 +1900,9 @@ local staticData = {
   [24281]=302, [24282]=4562, [24283]=38086, [21038]=0
 }
 
--- Hidden Tooltip for Scanning
 local scanner = CreateFrame("GameTooltip", "TC_ScanTooltip", nil, "GameTooltipTemplate")
 scanner:SetOwner(WorldFrame, "ANCHOR_NONE")
 
--- Function: Get SINGLE Unit Price
 local function TC_GetUnitPrice(id)
     if not id then return 0 end
     if staticData[id] then return staticData[id] end
@@ -1916,7 +1914,6 @@ local function TC_GetUnitPrice(id)
     return 0
 end
 
--- Event: Learn prices
 local learner = CreateFrame("Frame")
 learner:RegisterEvent("MERCHANT_SHOW")
 learner:SetScript("OnEvent", function()
@@ -1927,18 +1924,14 @@ learner:SetScript("OnEvent", function()
                 local _, _, id = string.find(link, "item:(%d+)")
                 id = tonumber(id)
                 if id then
-                    TC_ScanTooltip:SetBagItem(bag, slot)
-                    
-                    -- FIX: Check if MoneyFrame exists before using it
+                    scanner:SetBagItem(bag, slot)
                     if GameTooltipMoneyFrame1 and GameTooltipMoneyFrame1:IsVisible() then
                         local g = GameTooltipMoneyFrame1GoldButton:GetText() or 0
                         local s = GameTooltipMoneyFrame1SilverButton:GetText() or 0
                         local c = GameTooltipMoneyFrame1CopperButton:GetText() or 0
                         local money = (tonumber(g)*10000) + (tonumber(s)*100) + tonumber(c)
-                        
                         local _, count = GetContainerItemInfo(bag, slot)
                         if count and count > 1 then money = money / count end
-                        
                         if money > 0 then TrashCanDB[id] = money end
                     end
                 end
@@ -1965,15 +1958,54 @@ StaticPopupDialogs["TRASHCAN_CONFIRM"] = {
     end, timeout = 0, whileDead = 1, hideOnEscape = 1
 }
 
+-- BUTTON CREATION
 local f = CreateFrame("Button", "TC_Button", UIParent, "UIPanelButtonTemplate")
-f:SetWidth(60) f:SetHeight(20) f:SetPoint("CENTER", 0, 0) f:SetText("Junk") 
-f:GetFontString():SetFontObject("GameFontNormalSmall")
-f:SetMovable(true) f:EnableMouse(true) f:RegisterForDrag("RightButton")
+f:SetWidth(60) 
+f:SetHeight(20) 
+f:SetPoint("CENTER", 0, 0) 
+f:SetText("Junk")
+
+-- PFUI SKINNING LOGIC
+if pfUI and pfUI.api and pfUI.api.CreateBackdrop then
+    -- 1. Strip standard textures
+    local regions = { f:GetRegions() }
+    for _, region in pairs(regions) do
+        if region:GetObjectType() == "Texture" then
+            region:SetTexture(nil)
+        end
+    end
+    
+    -- 2. Apply pfUI Backdrop (Default)
+    pfUI.api.CreateBackdrop(f, nil, true) 
+    
+    -- 3. Set Hover/Highlight effects (Safer Method)
+    f:SetScript("OnEnter", function()
+        -- Highlight border white on hover
+        this:SetBackdropBorderColor(1,1,1,1)
+    end)
+    
+    f:SetScript("OnLeave", function()
+        -- Re-apply the default backdrop logic to reset color
+        -- This avoids crashing if 'pfUI.cache.border' is nil
+        pfUI.api.CreateBackdrop(this, nil, true)
+    end)
+else
+    -- Fallback for non-pfUI
+    f:GetFontString():SetFontObject("GameFontNormalSmall")
+end
+
+-- MOVEMENT & CLICKS
+f:SetMovable(true)
+f:EnableMouse(true)
+f:RegisterForDrag("RightButton")
 f:SetClampedToScreen(true)
+
+-- Explicitly using 'this' variable for Vanilla compatibility
 f:SetScript("OnDragStart", function() this:StartMoving() end)
 f:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
 
 f:SetScript("OnClick", function()
+    -- Only run logic on Left Click
     if arg1 == "LeftButton" then
         local bestPrice = 99999999
         local bestBag, bestSlot, bestLink = -1, -1, nil
