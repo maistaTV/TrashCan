@@ -1,6 +1,13 @@
 # TrashCan
-Destroy least valuable grey item
 
-Left Click deletes item, right click to drag.
+An standalone Addon that deletes the cheapest Junk (Grey) Item in your Inventory.
 
-Has PfUI Skin
+How to use:
+
+Left klick the "Junk" Button. Accept Pop-Up to delete suggested Item.
+
+Right Click and hold to move the Button.
+
+Comes with an built-in "Skin" when you have PFUi installed.
+
+Open for any suggestions.
