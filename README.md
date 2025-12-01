@@ -1,2 +1,2 @@
 # TrashCan
-Delete the least valuable junk item
+Destroy least valuable grey item
