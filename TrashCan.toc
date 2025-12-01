@@ -1,0 +1,8 @@
+## Interface: 11200
+## Title: TrashCan
+## Notes: Deletes cheapest junk with internal database.
+## Author: MAISTA
+## Version: 1.0
+## SavedVariables: TrashCanDB
+
+TrashCan.lua
